@@ -5,23 +5,24 @@ import com.example.hospital.entity.User;
 import com.example.hospital.repository.RoleRepository;
 import com.example.hospital.repository.UserRepository;
 import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import java.util.HashSet;
 import java.util.Set;
 
 @Component
+@RequiredArgsConstructor
 public class DataInitializer {
 
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public DataInitializer(RoleRepository roleRepository, UserRepository userRepository, PasswordEncoder passwordEncoder) {
-        this.roleRepository = roleRepository;
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
+    @Value("${ADMIN_PASSWORD}")
+    private String adminPassword;
+
 
     @PostConstruct
     public void init() {
@@ -29,14 +30,18 @@ public class DataInitializer {
         createRoleIfNotExists("ROLE_DOCTOR");
         createRoleIfNotExists("ROLE_PATIENT");
         createRoleIfNotExists("ROLE_PHARMACIST");
-        if (userRepository.findByUsername("admin").isEmpty()) {
-            User admin = User.builder()
-                    .username("admin")
-                    .email("admin@example.com")
-                    .password(passwordEncoder.encode("admin123"))
-                    .fullName("Admin User")
-                    .roles(new HashSet<>(Set.of(roleRepository.findByName("ROLE_ADMIN").get())))
-                    .build();
+        if (userRepository.findByEmail("admin@example.com").isEmpty()) {
+            User admin = new User();
+            admin.setEmail("admin@example.com");
+            admin.setUsername("admin");
+
+            String encoded = passwordEncoder.encode(adminPassword);
+            admin.setPassword(encoded);
+
+            Set<Role> roles = new HashSet<>();
+            roleRepository.findByName("ROLE_ADMIN").ifPresent(roles::add);
+            admin.setRoles(roles);
+
             userRepository.save(admin);
         }
     }
