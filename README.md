@@ -6,8 +6,14 @@
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
 ##  Overview
-A complete **Hospital Management System** built with **Java Spring Boot**, **MySQL**, and **MapStruct**.  
-This project demonstrates how to design and implement a healthcare system with **patients, doctors, visits, prescriptions, invoices, and pharmacy management**.
+The **Hospital Management System** is a Spring Boot application designed to manage hospital operations efficiently.  
+It provides secure RESTful APIs for handling **patients, doctors, visits, prescriptions, invoices, and authentication**.
+
+This project demonstrates **backend development best practices** using:
+- Layered architecture (**Controller → Service → Repository**)
+- **JWT-based authentication**
+- **Spring Data JPA** for data persistence
+- **MapStruct** for DTO mapping
 
 ---
 
@@ -49,13 +55,13 @@ This project demonstrates how to design and implement a healthcare system with *
 
 ## Future Improvements
 
-- User Authentication & Roles (Admin, Doctor, Patient, Pharmacist)
+- Add full JWT Authentication & Role-based Access (Admin / Doctor / Patient / Pharmacist)
 
 - Integration with external pharmacy APIs
 
-- Frontend with React or Angular
+- Develop a frontend using React or Angular  
 
-- Reporting & Analytics dashboard
+- Implement Swagger UI for API documentation 
 
 ---
 ## Author
@@ -67,4 +73,5 @@ This project demonstrates how to design and implement a healthcare system with *
 - [GitHub](https://github.com/Ayman2004iu)
 
 -  [LinkedIn]( https://www.linkedin.com/in/ayman-ibrahim-8b48aa28a/)
+
 
