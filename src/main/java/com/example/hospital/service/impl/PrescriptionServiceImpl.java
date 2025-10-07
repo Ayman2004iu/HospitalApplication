@@ -4,17 +4,13 @@ import com.example.hospital.dto.request.PrescriptionItemRequest;
 import com.example.hospital.dto.request.PrescriptionRequest;
 import com.example.hospital.dto.response.PrescriptionResponse;
 import com.example.hospital.entity.*;
-import com.example.hospital.enums.ChargeType;
-import com.example.hospital.enums.PaymentStatus;
-import com.example.hospital.enums.PrescriptionItemStatus;
-import com.example.hospital.enums.PrescriptionStatus;
+import com.example.hospital.enums.*;
 import com.example.hospital.mapper.PrescriptionMapper;
 import com.example.hospital.repository.*;
 import com.example.hospital.service.PrescriptionService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,13 +18,14 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class PrescriptionServiceImpl implements PrescriptionService {
+
     private final PrescriptionRepository prescriptionRepository;
     private final VisitRepository visitRepository;
     private final DoctorRepository doctorRepository;
     private final PatientRepository patientRepository;
     private final PrescriptionMapper prescriptionMapper;
-    private final MedicationRepository medicationRepository;
     private final InvoiceRepository invoiceRepository;
+    private final PrescriptionItemServiceImpl prescriptionItemService;
 
     @Transactional
     @Override
@@ -53,25 +50,11 @@ public class PrescriptionServiceImpl implements PrescriptionService {
         BigDecimal medsTotal = BigDecimal.ZERO;
 
         for (PrescriptionItemRequest itReq : request.getItems()) {
-            Medication med = medicationRepository.findById(itReq.getMedicationId())
-                    .orElseThrow(() -> new RuntimeException("Medication not found"));
-
-            BigDecimal price = med.getUnitPrice().multiply(BigDecimal.valueOf(itReq.getQuantity()));
-
-            PrescriptionItem item = PrescriptionItem.builder()
-                    .prescription(prescription)
-                    .medication(med)
-                    .quantity(itReq.getQuantity())
-                    .dosage(itReq.getDosage())
-                    .frequency(itReq.getFrequency())
-                    .durationDays(itReq.getDurationDays())
-                    .price(price)
-                    .status(PrescriptionItemStatus.PENDING)
-                    .build();
-
+            PrescriptionItem item = prescriptionItemService.createItemFromRequest(prescription, itReq);
             items.add(item);
-            medsTotal = medsTotal.add(price);
+            medsTotal = medsTotal.add(item.getPrice());
         }
+
         prescription.setItems(items);
 
         Invoice invoice = visit.getInvoice();
@@ -92,21 +75,17 @@ public class PrescriptionServiceImpl implements PrescriptionService {
                 .amount(medsTotal)
                 .build();
 
-        if (invoice.getLines() == null) {
-            invoice.setLines(new ArrayList<>());
-        }
-
         invoice.getLines().add(line);
         invoice.setTotal(invoice.getTotal().add(medsTotal));
 
         Prescription saved = prescriptionRepository.save(prescription);
-
         invoiceRepository.save(invoice);
 
         return prescriptionMapper.toResponse(saved);
     }
-    @Override
+
     @Transactional
+    @Override
     public void dispensePrescription(Long id) {
         Prescription prescription = prescriptionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Prescription not found"));
@@ -126,9 +105,9 @@ public class PrescriptionServiceImpl implements PrescriptionService {
         }
 
         prescription.setStatus(allDispensed ? PrescriptionStatus.DISPENSED : PrescriptionStatus.PARTIALLY_DISPENSED);
-
         prescriptionRepository.save(prescription);
     }
+
     @Override
     public PrescriptionResponse getPrescriptionById(Long id) {
         return prescriptionRepository.findById(id)
@@ -150,7 +129,6 @@ public class PrescriptionServiceImpl implements PrescriptionService {
                 .orElseThrow(() -> new RuntimeException("Prescription not found"));
 
         prescription.setNotes(request.getNotes());
-
         return prescriptionMapper.toResponse(prescriptionRepository.save(prescription));
     }
 }

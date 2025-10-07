@@ -1,5 +1,6 @@
 package com.example.hospital.dto.response;
 
+import com.example.hospital.enums.PrescriptionStatus;
 import lombok.*;
 
 import java.util.List;
@@ -14,5 +15,6 @@ public class PrescriptionResponse {
     private Long patientId;
     private Long visitId;
     private String notes;
+    private PrescriptionStatus status;
     private List<PrescriptionItemResponse> items;
 }
