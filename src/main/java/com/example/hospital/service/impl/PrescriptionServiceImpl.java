@@ -5,6 +5,7 @@ import com.example.hospital.dto.request.PrescriptionRequest;
 import com.example.hospital.dto.response.PrescriptionResponse;
 import com.example.hospital.entity.*;
 import com.example.hospital.enums.*;
+import com.example.hospital.exception.ResourceNotFoundException;
 import com.example.hospital.mapper.PrescriptionMapper;
 import com.example.hospital.repository.*;
 import com.example.hospital.service.PrescriptionService;
@@ -31,11 +32,11 @@ public class PrescriptionServiceImpl implements PrescriptionService {
     @Override
     public PrescriptionResponse createPrescription(PrescriptionRequest request) {
         Doctor doctor = doctorRepository.findById(request.getDoctorId())
-                .orElseThrow(() -> new RuntimeException("Doctor not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Doctor not found"));
         Patient patient = patientRepository.findById(request.getPatientId())
-                .orElseThrow(() -> new RuntimeException("Patient not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Patient not found"));
         Visit visit = visitRepository.findById(request.getVisitId())
-                .orElseThrow(() -> new RuntimeException("Visit not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Visit not found"));
 
         Prescription prescription = Prescription.builder()
                 .doctor(doctor)
@@ -88,7 +89,7 @@ public class PrescriptionServiceImpl implements PrescriptionService {
     @Override
     public void dispensePrescription(Long id) {
         Prescription prescription = prescriptionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Prescription not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Prescription not found"));
 
         boolean allDispensed = true;
 
@@ -112,7 +113,7 @@ public class PrescriptionServiceImpl implements PrescriptionService {
     public PrescriptionResponse getPrescriptionById(Long id) {
         return prescriptionRepository.findById(id)
                 .map(prescriptionMapper::toResponse)
-                .orElseThrow(() -> new RuntimeException("Prescription not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Prescription not found"));
     }
 
     @Override
@@ -126,7 +127,7 @@ public class PrescriptionServiceImpl implements PrescriptionService {
     @Override
     public PrescriptionResponse updatePrescription(Long id, PrescriptionRequest request) {
         Prescription prescription = prescriptionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Prescription not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Prescription not found"));
 
         prescription.setNotes(request.getNotes());
         return prescriptionMapper.toResponse(prescriptionRepository.save(prescription));

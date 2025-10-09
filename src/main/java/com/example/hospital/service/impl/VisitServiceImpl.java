@@ -5,6 +5,7 @@ import com.example.hospital.dto.response.VisitResponse;
 import com.example.hospital.entity.*;
 import com.example.hospital.enums.PaymentStatus;
 import com.example.hospital.enums.VisitStatus;
+import com.example.hospital.exception.ResourceNotFoundException;
 import com.example.hospital.mapper.VisitMapper;
 import com.example.hospital.repository.*;
 import com.example.hospital.service.VisitService;
@@ -33,13 +34,13 @@ public class VisitServiceImpl implements VisitService {
     @Override
     public VisitResponse createVisit(VisitRequest request) {
         Patient patient = patientRepository.findByNationalId(request.getNationalId())
-                .orElseThrow(() -> new RuntimeException("Patient not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Patient not found"));
         Doctor doctor = doctorRepository.findById(request.getDoctorId())
-                .orElseThrow(() -> new RuntimeException("Doctor not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Doctor not found"));
         Department department = departmentRepository.findById(request.getDepartmentId())
-                .orElseThrow(() -> new RuntimeException("Department not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Department not found"));
         Clinic clinic = clinicRepository.findById(request.getClinicId())
-                .orElseThrow(() -> new RuntimeException("Clinic not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Clinic not found"));
 
         Visit visit = Visit.builder()
                 .patient(patient)
@@ -64,7 +65,7 @@ public class VisitServiceImpl implements VisitService {
     @Override
     public List<VisitResponse>  getVisitByNationalId(Long nationalId) {
         Patient patient = patientRepository.findByNationalId(nationalId)
-                .orElseThrow(() -> new RuntimeException("Patient not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Patient not found"));
 
         return visitRepository.findAllByPatient(patient).stream()
                 .map(visitMapper::toResponse)

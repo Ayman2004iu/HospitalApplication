@@ -3,6 +3,7 @@ package com.example.hospital.service.impl;
 import com.example.hospital.dto.request.MedicationRequest;
 import com.example.hospital.dto.response.MedicationResponse;
 import com.example.hospital.entity.Medication;
+import com.example.hospital.exception.ResourceNotFoundException;
 import com.example.hospital.mapper.MedicationMapper;
 import com.example.hospital.repository.MedicationRepository;
 import com.example.hospital.service.MedicationService;
@@ -32,7 +33,7 @@ public class MedicationServiceImpl implements MedicationService {
     public MedicationResponse getMedicationById(Long id) {
         return medicationRepository.findById(id)
                 .map(medicationMapper::toResponse)
-                .orElseThrow(() -> new RuntimeException("Medication not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Medication not found"));
     }
 
     @Override

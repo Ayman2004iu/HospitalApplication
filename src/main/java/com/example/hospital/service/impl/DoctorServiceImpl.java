@@ -3,6 +3,8 @@ package com.example.hospital.service.impl;
 import com.example.hospital.dto.request.DoctorRequest;
 import com.example.hospital.dto.response.DoctorResponse;
 import com.example.hospital.entity.*;
+import com.example.hospital.exception.BusinessLogicException;
+import com.example.hospital.exception.ResourceNotFoundException;
 import com.example.hospital.mapper.DoctorMapper;
 import com.example.hospital.repository.*;
 import com.example.hospital.service.DoctorService;
@@ -32,16 +34,15 @@ public class DoctorServiceImpl implements DoctorService {
     @Override
     public DoctorResponse createDoctor(DoctorRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("User with email " + request.getEmail() + " already exists.");
+            throw new BusinessLogicException("User with email " + request.getEmail() + " already exists.");
         }
 
         Role doctorRole = roleRepository.findByName("ROLE_DOCTOR")
-                .orElseThrow(() -> new RuntimeException("Role not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Role not found"));
 
         User user = User.builder()
                 .username(request.getEmail())
                 .email(request.getEmail())
-                .phone(request.getPhone())
                 .fullName(request.getName())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .roles(new HashSet<>(Set.of(doctorRole)))
@@ -50,9 +51,9 @@ public class DoctorServiceImpl implements DoctorService {
         userRepository.save(user);
 
         Department department = departmentRepository.findById(request.getDepartmentId())
-                .orElseThrow(() -> new RuntimeException("Department not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Department not found"));
         Clinic clinic= clinicRepository.findById(request.getClinicId())
-                .orElseThrow(() -> new RuntimeException("Clinic not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Clinic not found"));
 
         Doctor doctor = Doctor.builder()
                 .user(user)
@@ -72,7 +73,7 @@ public class DoctorServiceImpl implements DoctorService {
     public DoctorResponse getDoctorById(Long id) {
         return doctorRepository.findById(id)
                 .map(doctorMapper::toResponse)
-                .orElseThrow(() -> new RuntimeException("Doctor not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Doctor not found"));
     }
 
     @Override
@@ -87,23 +88,22 @@ public class DoctorServiceImpl implements DoctorService {
     @Override
     public DoctorResponse updateDoctor(Long id, DoctorRequest request) {
         Doctor doctor = doctorRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Doctor not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Doctor not found"));
 
         if (request.getDepartmentId() != null) {
             Department department = departmentRepository.findById(request.getDepartmentId())
-                    .orElseThrow(() -> new RuntimeException("Department not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Department not found"));
             doctor.setDepartment(department);
         }
 
         if (request.getClinicId() != null) {
             Clinic clinic = clinicRepository.findById(request.getClinicId())
-                    .orElseThrow(() -> new RuntimeException("Clinic not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Clinic not found"));
             doctor.setClinic(clinic);
         }
 
         User user = doctor.getUser();
         user.setEmail(request.getEmail());
-        user.setPhone(request.getPhone());
         user.setUsername(request.getEmail());
         userRepository.save(user);
 

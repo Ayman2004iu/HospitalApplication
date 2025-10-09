@@ -5,6 +5,8 @@ import com.example.hospital.dto.request.LoginRequest;
 import com.example.hospital.dto.request.RegisterRequest;
 import com.example.hospital.entity.Role;
 import com.example.hospital.entity.User;
+import com.example.hospital.exception.BusinessLogicException;
+import com.example.hospital.exception.ResourceNotFoundException;
 import com.example.hospital.repository.RoleRepository;
 import com.example.hospital.repository.UserRepository;
 import com.example.hospital.security.JwtUtil;
@@ -35,13 +37,13 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public AuthResponses register(RegisterRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
-            throw new RuntimeException("Username already taken");
+            throw new BusinessLogicException("Username already taken");
         }
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email already in use");
+            throw new BusinessLogicException("Email already in use");
         }
         Role userRole = roleRepository.findByName("ROLE_PATIENT")
-                .orElseThrow(() -> new RuntimeException("Role not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Role not found"));
 
         Set<Role> roles = new HashSet<>();
         roles.add(userRole);
@@ -67,7 +69,7 @@ public class AuthServiceImpl implements AuthService {
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
 
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         return buildAuthResponse(user);
     }

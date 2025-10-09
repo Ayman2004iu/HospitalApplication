@@ -3,6 +3,7 @@ package com.example.hospital.service.impl;
 import com.example.hospital.dto.request.PatientRequest;
 import com.example.hospital.dto.response.PatientResponse;
 import com.example.hospital.entity.Patient;
+import com.example.hospital.exception.ResourceNotFoundException;
 import com.example.hospital.mapper.PatientMapper;
 import com.example.hospital.repository.PatientRepository;
 import com.example.hospital.service.PatientService;
@@ -19,7 +20,7 @@ public class PatientServiceImpl implements PatientService {
     @Override
     public PatientResponse createPatient(PatientRequest request) {
         Patient patient = patientRepository.findByNationalId(request.getNationalId())
-                .orElseThrow(() -> new RuntimeException("Patient not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Patient not found"));
 
             patientRepository.findByNationalId(request.getNationalId())
                 .map(p -> {
@@ -38,7 +39,7 @@ public class PatientServiceImpl implements PatientService {
     public PatientResponse getPatientByNationalId(Long nationalId) {
         return patientRepository.findByNationalId(nationalId)
                 .map(patientMapper::toResponse)
-                .orElseThrow(() -> new RuntimeException("Patient not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Patient not found"));
     }
 
     @Override

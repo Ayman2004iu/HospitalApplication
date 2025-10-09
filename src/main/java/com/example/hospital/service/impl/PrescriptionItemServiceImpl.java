@@ -6,6 +6,7 @@ import com.example.hospital.entity.Medication;
 import com.example.hospital.entity.Prescription;
 import com.example.hospital.entity.PrescriptionItem;
 import com.example.hospital.enums.PrescriptionItemStatus;
+import com.example.hospital.exception.ResourceNotFoundException;
 import com.example.hospital.mapper.PrescriptionItemMapper;
 import com.example.hospital.repository.MedicationRepository;
 import com.example.hospital.repository.PrescriptionItemRepository;
@@ -28,7 +29,7 @@ public class PrescriptionItemServiceImpl implements PrescriptionItemService {
     @Override
     public PrescriptionItemResponse addPrescriptionItem(PrescriptionItemRequest request) {
         Prescription prescription = prescriptionRepository.findById(request.getPrescriptionId())
-                .orElseThrow(() -> new RuntimeException("Prescription not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Prescription not found"));
 
         PrescriptionItem item = createItemFromRequest(prescription, request);
 
@@ -37,7 +38,7 @@ public class PrescriptionItemServiceImpl implements PrescriptionItemService {
 
     public PrescriptionItem createItemFromRequest(Prescription prescription, PrescriptionItemRequest request) {
         Medication medication = medicationRepository.findById(request.getMedicationId())
-                .orElseThrow(() -> new RuntimeException("Medication not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Medication not found"));
 
         BigDecimal price = medication.getUnitPrice()
                 .multiply(BigDecimal.valueOf(request.getQuantity()));
@@ -63,7 +64,7 @@ public class PrescriptionItemServiceImpl implements PrescriptionItemService {
     public PrescriptionItemResponse getPrescriptionItemById(Long id) {
         return itemRepository.findById(id)
                 .map(itemMapper::toResponse)
-                .orElseThrow(() -> new RuntimeException("PrescriptionItem not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("PrescriptionItem not found"));
     }
 
     @Override
@@ -77,10 +78,10 @@ public class PrescriptionItemServiceImpl implements PrescriptionItemService {
     @Override
     public PrescriptionItemResponse updatePrescriptionItem(Long id, PrescriptionItemRequest request) {
         PrescriptionItem item = itemRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("PrescriptionItem not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("PrescriptionItem not found"));
 
         Medication medication = medicationRepository.findById(request.getMedicationId())
-                .orElseThrow(() -> new RuntimeException("Medication not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Medication not found"));
 
         if (request.getQuantity() != null) {
             item.setQuantity(request.getQuantity());
