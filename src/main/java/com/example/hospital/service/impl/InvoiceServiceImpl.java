@@ -9,6 +9,7 @@ import com.example.hospital.exception.ResourceNotFoundException;
 import com.example.hospital.mapper.InvoiceMapper;
 import com.example.hospital.repository.InvoiceRepository;
 import com.example.hospital.service.InvoiceService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
@@ -29,6 +30,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     }
 
     @Override
+    @Transactional
     public InvoiceResponse payInvoice(Long visitId, InvoiceRequest request ) {
         Invoice invoice = invoiceRepository.findByVisit_Id(visitId)
                 .orElseThrow(() -> new ResourceNotFoundException("Invoice not found"));

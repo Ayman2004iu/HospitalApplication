@@ -1,5 +1,6 @@
 package com.example.hospital.dto.request;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 @Data
@@ -7,6 +8,9 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class DepartmentRequest {
+
+    @NotBlank(message = "Department name is required")
     private String name;
+
     private String description;
 }

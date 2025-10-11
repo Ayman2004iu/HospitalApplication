@@ -3,6 +3,7 @@ package com.example.hospital.controller;
 import com.example.hospital.dto.request.DoctorRequest;
 import com.example.hospital.dto.response.DoctorResponse;
 import com.example.hospital.service.DoctorService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,7 +20,7 @@ public class DoctorController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<DoctorResponse> createDoctor(@RequestBody DoctorRequest request) {
+    public ResponseEntity<DoctorResponse> createDoctor(@Valid  @RequestBody DoctorRequest request) {
         return ResponseEntity.ok(doctorService.createDoctor(request));
     }
 
@@ -39,7 +40,7 @@ public class DoctorController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<DoctorResponse> updateDoctor(@PathVariable Long id, @RequestBody DoctorRequest request) {
+    public ResponseEntity<DoctorResponse> updateDoctor(@PathVariable Long id,@Valid @RequestBody DoctorRequest request) {
         return ResponseEntity.ok(doctorService.updateDoctor(id, request));
     }
 }

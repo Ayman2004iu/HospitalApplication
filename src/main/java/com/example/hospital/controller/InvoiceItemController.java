@@ -3,6 +3,7 @@ package com.example.hospital.controller;
 import com.example.hospital.dto.request.InvoiceItemRequest;
 import com.example.hospital.dto.response.InvoiceItemResponse;
 import com.example.hospital.service.InvoiceItemService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,7 +20,7 @@ public class InvoiceItemController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<InvoiceItemResponse> addInvoiceItem(@RequestBody InvoiceItemRequest request) {
+    public ResponseEntity<InvoiceItemResponse> addInvoiceItem(@Valid  @RequestBody InvoiceItemRequest request) {
         return ResponseEntity.ok(itemService.addInvoiceItem(request));
     }
 

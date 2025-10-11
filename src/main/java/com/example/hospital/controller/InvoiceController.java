@@ -3,6 +3,7 @@ package com.example.hospital.controller;
 import com.example.hospital.dto.request.InvoiceRequest;
 import com.example.hospital.dto.response.InvoiceResponse;
 import com.example.hospital.service.InvoiceService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,7 +20,7 @@ public class InvoiceController {
 
     @PostMapping("/{visitId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<InvoiceResponse> payInvoice(@PathVariable Long visitId,@RequestBody InvoiceRequest request) {
+    public ResponseEntity<InvoiceResponse> payInvoice(@PathVariable Long visitId,@Valid  @RequestBody InvoiceRequest request) {
         return ResponseEntity.ok(invoiceService.payInvoice(visitId,request));
     }
 
