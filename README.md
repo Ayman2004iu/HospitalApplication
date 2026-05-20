@@ -55,8 +55,6 @@ This project demonstrates **backend development best practices** using:
 
 ## Future Improvements
 
-- Add full JWT Authentication & Role-based Access (Admin / Doctor / Patient / Pharmacist)
-
 - Integration with external pharmacy APIs
 
 - Develop a frontend using React or Angular  
