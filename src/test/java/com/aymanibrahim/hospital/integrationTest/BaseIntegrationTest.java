@@ -7,6 +7,7 @@ import com.aymanibrahim.hospital.enums.VisitStatus;
 import com.aymanibrahim.hospital.enums.RoleName;
 import com.aymanibrahim.hospital.repository.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -45,6 +46,7 @@ public abstract class BaseIntegrationTest {
     @Autowired protected MedicationRepository medicationRepository;
     @Autowired protected PrescriptionRepository prescriptionRepository;
     @Autowired protected PasswordEncoder passwordEncoder;
+    @Autowired protected EntityManager entityManager;
 
     private static final String ADMIN_EMAIL_CONST = "admin@hospital.com";
     private static final String ADMIN_PASSWORD_CONST = "admin123";
@@ -59,7 +61,9 @@ public abstract class BaseIntegrationTest {
                 .orElseGet(() -> {
                     Role r = new Role();
                     r.setName(RoleName.ROLE_ADMIN);
-                    return roleRepository.save(r);
+                    Role saved = roleRepository.save(r);
+                    entityManager.flush();
+                    return saved;
                 });
 
         Optional<User> existingAdmin = userRepository.findByEmail(adminEmail);
@@ -80,7 +84,26 @@ public abstract class BaseIntegrationTest {
             }
         }
 
-        adminToken = loginAndGetToken(adminEmail, adminPassword);
+        entityManager.flush();
+        entityManager.clear();
+
+        adminToken = loginAndGetTokenWithRetry(adminEmail, adminPassword, 3);
+    }
+
+    protected String loginAndGetTokenWithRetry(String email, String password, int maxRetries) throws Exception {
+        Exception lastException = null;
+        for (int attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                return loginAndGetToken(email, password);
+            } catch (Exception e) {
+                lastException = e;
+                if (attempt < maxRetries) {
+                    Thread.sleep(100 * attempt);
+                }
+            }
+        }
+        throw lastException != null ? lastException :
+                new RuntimeException("Failed to login after " + maxRetries + " attempts");
     }
 
     protected String loginAndGetToken(String email, String password) throws Exception {
@@ -103,21 +126,27 @@ public abstract class BaseIntegrationTest {
         p.setGender("Male");
         p.setAddress("Cairo");
         p.setPhone("01012345678");
-        return patientRepository.save(p);
+        Patient saved = patientRepository.save(p);
+        entityManager.flush();
+        return saved;
     }
 
     protected Department createDepartment(String name) {
         Department d = new Department();
         d.setName(name);
         d.setDescription("Test department");
-        return departmentRepository.save(d);
+        Department saved = departmentRepository.save(d);
+        entityManager.flush();
+        return saved;
     }
 
     protected Clinic createClinic(String name) {
         Clinic c = new Clinic();
         c.setName(name);
         c.setLocation("Floor 1");
-        return clinicRepository.save(c);
+        Clinic saved = clinicRepository.save(c);
+        entityManager.flush();
+        return saved;
     }
 
     protected Doctor createDoctor(String email, Department dept, Clinic clinic) {
@@ -125,7 +154,9 @@ public abstract class BaseIntegrationTest {
                 .orElseGet(() -> {
                     Role r = new Role();
                     r.setName(RoleName.ROLE_DOCTOR);
-                    return roleRepository.save(r);
+                    Role saved = roleRepository.save(r);
+                    entityManager.flush();
+                    return saved;
                 });
 
         User user = User.builder()
@@ -148,14 +179,16 @@ public abstract class BaseIntegrationTest {
         doctor.setDepartment(dept);
         doctor.setClinic(clinic);
 
-        return doctorRepository.save(doctor);
+        Doctor saved = doctorRepository.save(doctor);
+        entityManager.flush();
+        return saved;
     }
 
     protected String createDoctorAndGetToken(String email) throws Exception {
         Department dept = createDepartment("DocDept-" + System.nanoTime());
         Clinic clinic = createClinic("DocClinic-" + System.nanoTime());
         createDoctor(email, dept, clinic);
-        return loginAndGetToken(email, "pass123");
+        return loginAndGetTokenWithRetry(email, "pass123", 3);
     }
 
     protected Visit createOpenVisit(Patient patient, Doctor doctor, Department dept, Clinic clinic) {
@@ -175,7 +208,9 @@ public abstract class BaseIntegrationTest {
         invoice.setLines(new ArrayList<>());
 
         visit.setInvoice(invoice);
-        return visitRepository.save(visit);
+        Visit saved = visitRepository.save(visit);
+        entityManager.flush();
+        return saved;
     }
 
     protected Invoice createInvoiceForVisit(Patient patient, BigDecimal total) {
@@ -199,6 +234,7 @@ public abstract class BaseIntegrationTest {
 
         visit.setInvoice(invoice);
         visitRepository.save(visit);
+        entityManager.flush();
 
         return invoiceRepository.findByVisit_Id(visit.getId())
                 .orElseThrow();
@@ -210,13 +246,17 @@ public abstract class BaseIntegrationTest {
         med.setCode(code);
         med.setQuantityAvailable(qty);
         med.setUnitPrice(price);
-        return medicationRepository.save(med);
+        Medication saved = medicationRepository.save(med);
+        entityManager.flush();
+        return saved;
     }
 
     protected Prescription createPrescription(String notes) {
         Prescription p = new Prescription();
         p.setNotes(notes);
         p.setItems(new ArrayList<>());
-        return prescriptionRepository.save(p);
+        Prescription saved = prescriptionRepository.save(p);
+        entityManager.flush();
+        return saved;
     }
 }
