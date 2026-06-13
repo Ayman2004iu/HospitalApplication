@@ -85,13 +85,11 @@ public abstract class BaseIntegrationTest {
 
     protected String loginAndGetToken(String email, String password) throws Exception {
         LoginRequest req = new LoginRequest(email, password);
-
         MvcResult result = mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isOk())
                 .andReturn();
-
         return objectMapper.readTree(result.getResponse().getContentAsString())
                 .get("token")
                 .asText();
@@ -156,18 +154,11 @@ public abstract class BaseIntegrationTest {
     protected String createDoctorAndGetToken(String email) throws Exception {
         Department dept = createDepartment("DocDept-" + System.nanoTime());
         Clinic clinic = createClinic("DocClinic-" + System.nanoTime());
-
         createDoctor(email, dept, clinic);
-
         return loginAndGetToken(email, "pass123");
     }
 
-    protected Visit createOpenVisit(
-            Patient patient,
-            Doctor doctor,
-            Department dept,
-            Clinic clinic) {
-
+    protected Visit createOpenVisit(Patient patient, Doctor doctor, Department dept, Clinic clinic) {
         Visit visit = new Visit();
         visit.setPatient(patient);
         visit.setDoctor(doctor);
@@ -184,7 +175,6 @@ public abstract class BaseIntegrationTest {
         invoice.setLines(new ArrayList<>());
 
         visit.setInvoice(invoice);
-
         return visitRepository.save(visit);
     }
 
@@ -208,25 +198,18 @@ public abstract class BaseIntegrationTest {
         invoice.setPaymentStatus(PaymentStatus.UNPAID);
 
         visit.setInvoice(invoice);
-
         visitRepository.save(visit);
 
         return invoiceRepository.findByVisit_Id(visit.getId())
                 .orElseThrow();
     }
 
-    protected Medication createMedication(
-            String name,
-            String code,
-            int qty,
-            BigDecimal price) {
-
+    protected Medication createMedication(String name, String code, int qty, BigDecimal price) {
         Medication med = new Medication();
         med.setName(name);
         med.setCode(code);
         med.setQuantityAvailable(qty);
         med.setUnitPrice(price);
-
         return medicationRepository.save(med);
     }
 
@@ -234,7 +217,6 @@ public abstract class BaseIntegrationTest {
         Prescription p = new Prescription();
         p.setNotes(notes);
         p.setItems(new ArrayList<>());
-
         return prescriptionRepository.save(p);
     }
 }
