@@ -57,8 +57,6 @@ public abstract class BaseIntegrationTest {
 
     @BeforeEach
     void setUpBase() throws Exception {
-        entityManager.clear();
-
         Role adminRole = roleRepository.findByName(RoleName.ROLE_ADMIN)
                 .orElseGet(() -> {
                     Role r = new Role();
