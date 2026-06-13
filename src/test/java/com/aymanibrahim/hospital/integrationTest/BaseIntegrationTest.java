@@ -57,6 +57,8 @@ public abstract class BaseIntegrationTest {
 
     @BeforeEach
     void setUpBase() throws Exception {
+        entityManager.clear();
+
         Role adminRole = roleRepository.findByName(RoleName.ROLE_ADMIN)
                 .orElseGet(() -> {
                     Role r = new Role();
@@ -85,7 +87,17 @@ public abstract class BaseIntegrationTest {
         }
 
         entityManager.flush();
+        User adminUser = userRepository.findByEmail(adminEmail).orElseThrow();
+        entityManager.refresh(adminUser);
         entityManager.clear();
+
+        User verifiedUser = userRepository.findByEmail(adminEmail)
+                .orElseThrow(() -> new RuntimeException("Admin user not found after creation"));
+        boolean hasAdminRole = verifiedUser.getRoles().stream()
+                .anyMatch(r -> r.getName() == RoleName.ROLE_ADMIN);
+        if (!hasAdminRole) {
+            throw new RuntimeException("Admin user does not have ROLE_ADMIN");
+        }
 
         adminToken = loginAndGetTokenWithRetry(adminEmail, adminPassword, 3);
     }
@@ -166,8 +178,8 @@ public abstract class BaseIntegrationTest {
                 .password(passwordEncoder.encode("pass123"))
                 .roles(new HashSet<>(Set.of(role)))
                 .build();
-
         userRepository.save(user);
+        entityManager.flush();
 
         Doctor doctor = new Doctor();
         doctor.setUser(user);
@@ -178,7 +190,6 @@ public abstract class BaseIntegrationTest {
         doctor.setLicenseNumber("LIC-IT-001");
         doctor.setDepartment(dept);
         doctor.setClinic(clinic);
-
         Doctor saved = doctorRepository.save(doctor);
         entityManager.flush();
         return saved;

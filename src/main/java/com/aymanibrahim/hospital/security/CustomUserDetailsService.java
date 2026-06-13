@@ -25,11 +25,9 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         com.aymanibrahim.hospital.entity.User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException(
-                        "User not found with email: " + email));
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
         Collection<SimpleGrantedAuthority> authorities = loadAuthoritiesForUser(user);
-
         log.debug("Loaded user: {}, authorities: {}", email,
                 authorities.stream().map(SimpleGrantedAuthority::getAuthority).collect(Collectors.toList()));
 
@@ -45,9 +43,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     }
 
     @Transactional(readOnly = true)
-    private Collection<SimpleGrantedAuthority> loadAuthoritiesForUser(
-            com.aymanibrahim.hospital.entity.User user) {
-
+    private Collection<SimpleGrantedAuthority> loadAuthoritiesForUser(com.aymanibrahim.hospital.entity.User user) {
         if (user.getRoles() == null || user.getRoles().isEmpty()) {
             log.warn("User {} has no roles assigned", user.getEmail());
             return java.util.Collections.emptyList();
@@ -55,11 +51,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         return user.getRoles()
                 .stream()
-                .map(role -> {
-                    String roleName = role.getName().name();
-                    log.trace("Adding authority for user {}: {}", user.getEmail(), roleName);
-                    return new SimpleGrantedAuthority(roleName);
-                })
+                .map(role -> new SimpleGrantedAuthority(role.getName().name()))
                 .collect(Collectors.toSet());
     }
 }
