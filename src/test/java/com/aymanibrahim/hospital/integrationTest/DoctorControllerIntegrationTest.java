@@ -6,7 +6,7 @@ import com.aymanibrahim.hospital.entity.Department;
 import com.aymanibrahim.hospital.entity.Doctor;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
-
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -58,7 +58,9 @@ class DoctorControllerIntegrationTest extends BaseIntegrationTest {
                         .header("Authorization", "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest());
+                .andDo(print())
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.name").value("Dr Khalid"));
     }
 
     @Test
