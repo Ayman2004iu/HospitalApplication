@@ -9,7 +9,6 @@ import com.aymanibrahim.hospital.repository.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -47,33 +46,15 @@ public abstract class BaseIntegrationTest {
     @Autowired protected PrescriptionRepository prescriptionRepository;
     @Autowired protected PasswordEncoder passwordEncoder;
 
-    @Value("${ADMIN_EMAIL}")
-    protected String adminEmail;
+    private static final String ADMIN_EMAIL_CONST = "admin@hospital.com";
+    private static final String ADMIN_PASSWORD_CONST = "admin123";
 
-    @Value("${ADMIN_PASSWORD}")
-    protected String adminPassword;
-
+    protected String adminEmail = ADMIN_EMAIL_CONST;
+    protected String adminPassword = ADMIN_PASSWORD_CONST;
     protected String adminToken;
 
-    private void createAdminUserIfNotExists() {
-        Optional<User> existingUser = userRepository.findByEmail(adminEmail);
-        if (existingUser.isPresent()) {
-            User user = existingUser.get();
-            boolean hasAdminRole = user.getRoles().stream()
-                    .anyMatch(role -> role.getName() == RoleName.ROLE_ADMIN);
-            if (!hasAdminRole) {
-                Role adminRole = roleRepository.findByName(RoleName.ROLE_ADMIN)
-                        .orElseGet(() -> {
-                            Role r = new Role();
-                            r.setName(RoleName.ROLE_ADMIN);
-                            return roleRepository.save(r);
-                        });
-                user.getRoles().add(adminRole);
-                userRepository.save(user);
-            }
-            return;
-        }
-
+    @BeforeEach
+    void setUpBase() throws Exception {
         Role adminRole = roleRepository.findByName(RoleName.ROLE_ADMIN)
                 .orElseGet(() -> {
                     Role r = new Role();
@@ -81,20 +62,24 @@ public abstract class BaseIntegrationTest {
                     return roleRepository.save(r);
                 });
 
-        User adminUser = User.builder()
-                .username(adminEmail)
-                .email(adminEmail)
-                .fullName("Test Admin")
-                .password(passwordEncoder.encode(adminPassword))
-                .roles(new HashSet<>(Set.of(adminRole)))
-                .build();
+        Optional<User> existingAdmin = userRepository.findByEmail(adminEmail);
+        if (existingAdmin.isEmpty()) {
+            User adminUser = User.builder()
+                    .username(adminEmail)
+                    .email(adminEmail)
+                    .fullName("System Admin")
+                    .password(passwordEncoder.encode(adminPassword))
+                    .roles(new HashSet<>(Set.of(adminRole)))
+                    .build();
+            userRepository.save(adminUser);
+        } else {
+            User user = existingAdmin.get();
+            if (user.getRoles().stream().noneMatch(r -> r.getName() == RoleName.ROLE_ADMIN)) {
+                user.getRoles().add(adminRole);
+                userRepository.save(user);
+            }
+        }
 
-        userRepository.save(adminUser);
-    }
-
-    @BeforeEach
-    void setUpBase() throws Exception {
-        createAdminUserIfNotExists();
         adminToken = loginAndGetToken(adminEmail, adminPassword);
     }
 
