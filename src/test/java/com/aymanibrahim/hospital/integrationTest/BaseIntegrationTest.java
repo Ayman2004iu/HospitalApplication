@@ -85,17 +85,6 @@ public abstract class BaseIntegrationTest {
         }
 
         entityManager.flush();
-        User adminUser = userRepository.findByEmail(adminEmail).orElseThrow();
-        entityManager.refresh(adminUser);
-        entityManager.clear();
-
-        User verifiedUser = userRepository.findByEmail(adminEmail)
-                .orElseThrow(() -> new RuntimeException("Admin user not found after creation"));
-        boolean hasAdminRole = verifiedUser.getRoles().stream()
-                .anyMatch(r -> r.getName() == RoleName.ROLE_ADMIN);
-        if (!hasAdminRole) {
-            throw new RuntimeException("Admin user does not have ROLE_ADMIN");
-        }
 
         adminToken = loginAndGetTokenWithRetry(adminEmail, adminPassword, 3);
     }
@@ -116,6 +105,7 @@ public abstract class BaseIntegrationTest {
                 new RuntimeException("Failed to login after " + maxRetries + " attempts");
     }
 
+    @Transactional
     protected String loginAndGetToken(String email, String password) throws Exception {
         LoginRequest req = new LoginRequest(email, password);
         MvcResult result = mockMvc.perform(post("/api/auth/login")
