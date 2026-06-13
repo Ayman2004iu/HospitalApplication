@@ -7,12 +7,12 @@ shift
 port="$1"
 shift
 
-echo "Waiting for MySQL at $host:$port ..."
+echo "Waiting for $host:$port..."
 
-until mysqladmin ping -h"$host" --silent; do
-  echo "MySQL is not ready yet, retrying..."
+until nc -z "$host" "$port"; do
+  echo "Still waiting..."
   sleep 2
 done
 
-echo "MySQL is ready! Starting application..."
+echo "Database is up!"
 exec "$@"
